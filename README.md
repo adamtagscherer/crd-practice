@@ -2,7 +2,7 @@
 
 With this repository you can define a custom resource with the following fields:
 
-replica - the replica count of the pods
+replicas - the replica count of the pods
 
 host - the domain on which you want the application to be available
 

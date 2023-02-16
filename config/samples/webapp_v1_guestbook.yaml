@@ -9,6 +9,6 @@ metadata:
     app.kubernetes.io/created-by: guestbook
   name: guestbook-sample
 spec:
-  replicas: 1
-  host: foo.org
+  replicas: 2
+  host: palacsinta.org
   image: nginx:latest

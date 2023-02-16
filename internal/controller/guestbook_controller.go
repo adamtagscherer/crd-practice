@@ -30,7 +30,6 @@ import (
 	webappv1 "my.domain/guestbook/api/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	l "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -79,10 +78,6 @@ func (r *GuestbookReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 func (r *GuestbookReconciler) ManageDeployment(guestbook webappv1.Guestbook, log logr.Logger) error {
 	dep := NewDeployment(&guestbook)
-	if err := controllerutil.SetControllerReference(&guestbook, dep, r.Scheme); err != nil {
-		log.Error(err, "unable to set owner")
-		return err
-	}
 
 	existingDep := &appsv1.Deployment{}
 	if err := r.Get(context.TODO(), types.NamespacedName{Name: dep.Name, Namespace: dep.Namespace}, existingDep); err != nil && errors.IsNotFound(err) {
@@ -108,10 +103,6 @@ func (r *GuestbookReconciler) ManageDeployment(guestbook webappv1.Guestbook, log
 
 func (r *GuestbookReconciler) ManageService(guestbook webappv1.Guestbook, log logr.Logger) error {
 	svc := NewService(&guestbook)
-	if err := controllerutil.SetControllerReference(&guestbook, svc, r.Scheme); err != nil {
-		log.Error(err, "unable to set owner")
-		return err
-	}
 
 	existingSvc := &apiv1.Service{}
 	if err := r.Get(context.TODO(), types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, existingSvc); err != nil && errors.IsNotFound(err) {
@@ -129,10 +120,6 @@ func (r *GuestbookReconciler) ManageService(guestbook webappv1.Guestbook, log lo
 
 func (r *GuestbookReconciler) ManageIngress(guestbook webappv1.Guestbook, log logr.Logger) error {
 	ing := NewIngress(&guestbook)
-	if err := controllerutil.SetControllerReference(&guestbook, ing, r.Scheme); err != nil {
-		log.Error(err, "unable to set owner")
-		return err
-	}
 
 	existingIng := &v1Networking.Ingress{}
 	if err := r.Get(context.TODO(), types.NamespacedName{Name: ing.Name, Namespace: ing.Namespace}, existingIng); err != nil && errors.IsNotFound(err) {
@@ -161,8 +148,8 @@ func NewDeployment(g *webappv1.Guestbook) *appsv1.Deployment {
 
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      g.Name + "-deployment",
-			Namespace: g.Namespace,
+			Name:      "deployment",
+			Namespace: "guestbook-system",
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: &replicas,
@@ -196,8 +183,8 @@ func NewDeployment(g *webappv1.Guestbook) *appsv1.Deployment {
 func NewService(g *webappv1.Guestbook) *apiv1.Service {
 	return &apiv1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      g.Name + "-service",
-			Namespace: g.Namespace,
+			Name:      "service",
+			Namespace: "guestbook-system",
 		},
 		Spec: apiv1.ServiceSpec{
 			Selector: map[string]string{
@@ -215,8 +202,8 @@ func NewIngress(g *webappv1.Guestbook) *v1Networking.Ingress {
 
 	return &v1Networking.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      g.Namespace + "-ingress",
-			Namespace: g.Namespace,
+			Name:      "ingress",
+			Namespace: "guestbook-system",
 			Annotations: map[string]string{
 				"kubernetes.io/ingress.class": "nginx",
 				"cert-manager.io/issuer":      "letsencrypt-development",

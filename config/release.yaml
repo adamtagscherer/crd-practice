@@ -143,6 +143,32 @@ metadata:
   name: guestbook-manager-role
 rules:
   - apiGroups:
+      - ""
+    resources:
+      - services
+    verbs:
+      - create
+      - list
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    verbs:
+      - create
+      - list
+      - update
+      - watch
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses
+    verbs:
+      - create
+      - list
+      - update
+      - watch
+  - apiGroups:
       - webapp.my.domain
     resources:
       - guestbooks

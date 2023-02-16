@@ -42,6 +42,9 @@ type GuestbookReconciler struct {
 //+kubebuilder:rbac:groups=webapp.my.domain,resources=guestbooks,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=webapp.my.domain,resources=guestbooks/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=webapp.my.domain,resources=guestbooks/finalizers,verbs=update
+//+kubebuilder:rbac:groups=apps,resources=deployments,verbs=list;watch;create;update
+//+kubebuilder:rbac:groups="",resources=services,verbs=list;watch;create
+//+kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=list;watch;create;update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -65,7 +68,7 @@ func (r *GuestbookReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
-	if err := r.ManageService(guestbook, log); err != nil {
+	if err := r.ManageService(log); err != nil {
 		return ctrl.Result{}, err
 	}
 
@@ -101,8 +104,8 @@ func (r *GuestbookReconciler) ManageDeployment(guestbook webappv1.Guestbook, log
 	return nil
 }
 
-func (r *GuestbookReconciler) ManageService(guestbook webappv1.Guestbook, log logr.Logger) error {
-	svc := NewService(&guestbook)
+func (r *GuestbookReconciler) ManageService(log logr.Logger) error {
+	svc := NewService()
 
 	existingSvc := &apiv1.Service{}
 	if err := r.Get(context.TODO(), types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, existingSvc); err != nil && errors.IsNotFound(err) {
@@ -148,20 +151,20 @@ func NewDeployment(g *webappv1.Guestbook) *appsv1.Deployment {
 
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "deployment",
+			Name:      "guestbook-deployment",
 			Namespace: "guestbook-system",
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: &replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"deployment": g.Name + "-deployment",
+					"deployment": "guestbook-deployment",
 				},
 			},
 			Template: apiv1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"deployment": g.Name + "-deployment",
+						"deployment": "guestbook-deployment",
 					},
 				},
 				Spec: apiv1.PodSpec{
@@ -180,15 +183,15 @@ func NewDeployment(g *webappv1.Guestbook) *appsv1.Deployment {
 	}
 }
 
-func NewService(g *webappv1.Guestbook) *apiv1.Service {
+func NewService() *apiv1.Service {
 	return &apiv1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "service",
+			Name:      "guestbook-service",
 			Namespace: "guestbook-system",
 		},
 		Spec: apiv1.ServiceSpec{
 			Selector: map[string]string{
-				"deployment": g.Name + "-deployment",
+				"deployment": "guestbook-deployment",
 			},
 			Ports: []apiv1.ServicePort{{
 				Port: 80,
@@ -221,7 +224,7 @@ func NewIngress(g *webappv1.Guestbook) *v1Networking.Ingress {
 									PathType: &pathTypePrefix,
 									Backend: v1Networking.IngressBackend{
 										Service: &v1Networking.IngressServiceBackend{
-											Name: g.Name + "-service",
+											Name: "guestbook-service",
 											Port: v1Networking.ServiceBackendPort{
 												Number: 80,
 											},

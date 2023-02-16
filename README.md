@@ -8,6 +8,8 @@ host - the domain on which you want the application to be available
 
 image - the image to use for your application
 
+After installing everything you should be able to visit the domain you specified through HTTP and HTTPS protocols.
+
 ## Prerequisites
 
 - [go](https://go.dev/dl) - version v1.19.0+
@@ -55,16 +57,16 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main
 
 ### [cert manager](https://cert-manager.io)
 
-Cert manager provides HTTP access to our server.
+Cert manager provides HTTPS access to the server.
 To apply the manifests run the following script.
 
 ```bash
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.11.0/cert-manager.yaml
 ```
 
-### cluster issuer, crd, controller
+### cluster issuer, crd, controller manager
 
-Install a cluster, CRD and the controller on the cluster.
+Install a cluster issuer, CRD and the controller manager on the cluster with the following script.
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/adamtagscherer/crd-practice/main/config/release.yaml

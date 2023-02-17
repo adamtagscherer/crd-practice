@@ -55,6 +55,15 @@ To apply the manifests of the controller run the following script.
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
 ```
 
+Wait for the installation to finish.
+
+```bash
+kubectl wait --namespace ingress-nginx \
+  --for=condition=ready pod \
+  --selector=app.kubernetes.io/component=controller \
+  --timeout=90s
+```
+
 ### [cert manager](https://cert-manager.io)
 
 Cert manager provides HTTPS access to the server.
@@ -62,6 +71,13 @@ To apply the manifests run the following script.
 
 ```bash
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.11.0/cert-manager.yaml
+```
+
+Wait for the installation to finish.
+You will need [cmctl](https://cert-manager.io/docs/reference/cmctl/#installation) for this.
+
+```bash
+cmctl check api --wait=2m
 ```
 
 ### cluster issuer, crd, controller manager
@@ -77,6 +93,7 @@ kubectl apply -f https://raw.githubusercontent.com/adamtagscherer/crd-practice/m
 This is a sample custom resource which you can install on your cluster.
 
 ```bash
+cat <<EOF | kubectl apply -f -
 apiVersion: webapp.my.domain/v1
 kind: Guestbook
 metadata:
@@ -91,13 +108,15 @@ spec:
   replicas: 2
   host: palacsinta.org
   image: nginx:latest
-
+EOF
 ```
 
 If you want to access the pods from your browser you have to add a new entry for `palacsinta.org` to your `/etc/hosts` file.
 
+You can apply the same CRD with other parameters and the controller will alter the state of the cluster to match your yaml.
+
 ## Improvements
 
-- add a webhook to validate objects and set default values
-- add metrics
-- add e2e tests
+- add a webhook to validate what objects the user applies and to give it default values if they are not given
+- add metrics endpoint to the pods and the controller
+- add e2e tests to test if everything is set up properly

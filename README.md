@@ -95,3 +95,9 @@ spec:
 ```
 
 If you want to access the pods from your browser you have to add a new entry for `palacsinta.org` to your `/etc/hosts` file.
+
+## Improvements
+
+- add a webhook to validate objects and set default values
+- add metrics
+- add e2e tests
